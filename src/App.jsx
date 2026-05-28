@@ -35,55 +35,55 @@ const PRODUCTS = [
   {
     id: "1", name: "Avena Quaker Instantánea", brand: "Quaker",
     barcode: "0030000010693", status: "warning", confidence: 72,
-    scannedAt: "2 min ago", category: "Cereals",
+    scannedAt: "Hace 2 min", category: "Cereales",
     ingredients: [
-      { name: "Avena",             risk: "warning", note: "Possible cross-contamination in shared facilities" },
+      { name: "Avena",             risk: "warning", note: "Posible contaminación cruzada en instalaciones compartidas" },
       { name: "Azúcar",            risk: "safe"    },
       { name: "Sal",               risk: "safe"    },
-      { name: "Almidón modificado",risk: "warning", note: "Source unknown — may be wheat-based"               },
+      { name: "Almidón modificado",risk: "warning", note: "Origen desconocido — puede contener trigo"               },
     ],
-    reason: "Oats are naturally gluten-free but often processed in wheat facilities. Cross-contamination risk is high.",
+    reason: "La avena es naturalmente sin gluten pero a menudo se procesa en instalaciones con trigo. Alto riesgo de contaminación cruzada.",
     alternatives: ["Avena Puro Sin Gluten (Bob's Red Mill)", "Quinoa Flakes Nature"],
     community: 89, verified: false,
   },
   {
     id: "2", name: "Pan de Molde Bimbo", brand: "Bimbo",
     barcode: "7501000601013", status: "danger", confidence: 99,
-    scannedAt: "1h ago", category: "Bakery",
+    scannedAt: "Hace 1h", category: "Panadería",
     ingredients: [
-      { name: "Harina de Trigo",   risk: "danger",  note: "Primary gluten source"       },
+      { name: "Harina de Trigo",   risk: "danger",  note: "Fuente principal de gluten"       },
       { name: "Agua",              risk: "safe"                                          },
-      { name: "Gluten de Trigo",   risk: "danger",  note: "Concentrated gluten additive" },
+      { name: "Gluten de Trigo",   risk: "danger",  note: "Aditivo de gluten concentrado" },
       { name: "Levadura",          risk: "safe"                                          },
       { name: "Sal",               risk: "safe"                                          },
     ],
-    reason: "Contains wheat flour and added wheat gluten. Absolutely not safe for celiac patients.",
+    reason: "Contiene harina de trigo y gluten de trigo añadido. Absolutamente no apto para celíacos.",
     alternatives: ["Pan Sin Gluten Schär Ciabatta", "Pan BFree Multisemillas", "Pan Genius GF"],
     community: 314, verified: true,
   },
   {
     id: "3", name: "Arroz Brillante Integral", brand: "Brillante",
     barcode: "8410033000028", status: "safe", confidence: 98,
-    scannedAt: "3h ago", category: "Grains",
+    scannedAt: "Hace 3h", category: "Granos",
     ingredients: [
       { name: "Arroz integral",    risk: "safe" },
     ],
-    reason: "100% brown rice. Processed in a dedicated gluten-free facility. Certified by FACE.",
+    reason: "100% arroz integral. Procesado en instalación exclusiva sin gluten. Certificado por FACE.",
     alternatives: [],
     community: 512, verified: true,
   },
   {
     id: "4", name: "Galletas Digestive", brand: "McVitie's",
     barcode: "5000168002021", status: "danger", confidence: 96,
-    scannedAt: "Yesterday",
+    scannedAt: "Ayer",
     category: "Snacks",
     ingredients: [
-      { name: "Harina de trigo integral", risk: "danger",  note: "Contains gluten"       },
+      { name: "Harina de trigo integral", risk: "danger",  note: "Contiene gluten"       },
       { name: "Azúcar",                  risk: "safe"                                   },
       { name: "Aceite de palma",         risk: "safe"                                   },
-      { name: "Jarabe de malta",         risk: "danger",  note: "Barley malt — contains gluten" },
+      { name: "Jarabe de malta",         risk: "danger",  note: "Malta de cebada — contiene gluten" },
     ],
-    reason: "Contains whole wheat flour and barley malt syrup. Classic hidden gluten double hit.",
+    reason: "Contiene harina de trigo integral y jarabe de malta de cebada. Doble fuente de gluten oculto.",
     alternatives: ["Digestive GF Schär", "Galletas Nairn's Sin Gluten"],
     community: 201, verified: true,
   },
@@ -92,42 +92,42 @@ const PRODUCTS = [
 const RESTAURANTS = [
   {
     id: "r1", name: "Celiac Kitchen",
-    cuisine: "Mediterranean", address: "Calle Mayor 14",
+    cuisine: "Mediterránea", address: "Calle Mayor 14",
     distance: "0.3 km", rating: 4.9, reviews: 234,
-    status: "safe", badge: "100% Certified Gluten-Free",
-    tags: ["Dedicated kitchen", "Staff trained", "FACE certified"],
+    status: "safe", badge: "100% Certificado Sin Gluten",
+    tags: ["Cocina exclusiva", "Personal formado", "Certificado FACE"],
     verified: true, savedByMe: true,
   },
   {
     id: "r2", name: "Green Bowl",
-    cuisine: "Healthy & Vegan", address: "Av. Diagonal 88",
+    cuisine: "Saludable & Vegano", address: "Av. Diagonal 88",
     distance: "0.8 km", rating: 4.6, reviews: 187,
-    status: "safe", badge: "Extensive GF Menu",
-    tags: ["Allergen informed", "GF menu card", "No cross-contact policy"],
+    status: "safe", badge: "Menú SG Completo",
+    tags: ["Información de alérgenos", "Carta SG disponible", "Política sin contacto cruzado"],
     verified: true, savedByMe: false,
   },
   {
     id: "r3", name: "Pasta Roma",
-    cuisine: "Italian", address: "Via Napoli 3",
+    cuisine: "Italiana", address: "Via Napoli 3",
     distance: "1.2 km", rating: 4.2, reviews: 312,
-    status: "warning", badge: "Risk of Cross-Contamination",
-    tags: ["Shared kitchen", "GF pasta available", "Inform staff"],
+    status: "warning", badge: "Riesgo de Contaminación Cruzada",
+    tags: ["Cocina compartida", "Pasta SG disponible", "Avisar al personal"],
     verified: false, savedByMe: false,
   },
   {
     id: "r4", name: "Sushi Zen",
-    cuisine: "Japanese", address: "Carrer Balmes 55",
+    cuisine: "Japonesa", address: "Carrer Balmes 55",
     distance: "1.5 km", rating: 4.7, reviews: 156,
-    status: "warning", badge: "Caution Required",
-    tags: ["Regular soy sauce has gluten", "Ask for tamari", "Alert chef"],
+    status: "warning", badge: "Precaución Necesaria",
+    tags: ["La salsa de soja normal tiene gluten", "Pedir tamari", "Avisar al chef"],
     verified: false, savedByMe: false,
   },
   {
     id: "r5", name: "Nomo Bakery",
-    cuisine: "GF Bakery", address: "Rambla Catalunya 22",
+    cuisine: "Panadería SG", address: "Rambla Catalunya 22",
     distance: "2.1 km", rating: 4.8, reviews: 98,
-    status: "safe", badge: "100% Certified Gluten-Free",
-    tags: ["Dedicated facility", "Certified", "Pastries & bread"],
+    status: "safe", badge: "100% Certificado Sin Gluten",
+    tags: ["Instalación exclusiva", "Certificado", "Bollería y pan"],
     verified: true, savedByMe: true,
   },
 ];
@@ -148,7 +148,7 @@ const HIDDEN_GLUTEN_MARKERS = [
 const statusColor  = (s) => s === "safe" ? C.safe   : s === "warning" ? C.warning   : C.danger;
 const statusBg     = (s) => s === "safe" ? C.safeLight : s === "warning" ? C.warningLight : C.dangerLight;
 const statusBorder = (s) => s === "safe" ? C.safeBorder : s === "warning" ? C.warningBorder : C.dangerBorder;
-const statusLabel  = (s) => s === "safe" ? "SAFE"     : s === "warning" ? "CAUTION"    : "NOT SAFE";
+const statusLabel  = (s) => s === "safe" ? "SEGURO"     : s === "warning" ? "PRECAUCIÓN"    : "NO APTO";
 const statusEmoji  = (s) => s === "safe" ? "✓"        : s === "warning" ? "!"           : "✕";
 
 function analyzeText(text) {
@@ -284,7 +284,7 @@ function BackBtn({ onBack, dark = false }) {
       borderRadius: 100, padding: "7px 14px 7px 10px", cursor: "pointer",
       fontSize: 14, fontWeight: 700,
     }}>
-      <ArrowLeft size={16} strokeWidth={2.5} /> Back
+      <ArrowLeft size={16} strokeWidth={2.5} /> Atrás
     </button>
   );
 }
@@ -309,20 +309,20 @@ function EmptyState({ emoji, title, sub, cta, onCta }) {
 function HomeScreen({ nav, setActiveProduct }) {
   const [greeting] = useState(() => {
     const h = new Date().getHours();
-    return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    return h < 12 ? "Buenos días" : h < 18 ? "Buenas tardes" : "Buenas noches";
   });
 
   const actions = [
-    { id:"scanner",     icon:Camera,   label:"Scan Product",        sub:"Barcode & label scan", accent:"#1E8E5A" },
-    { id:"ingredients", icon:Zap,      label:"Analyze Ingredients", sub:"Paste or photograph",  accent:"#5C63C8" },
-    { id:"restaurants", icon:MapPin,   label:"Safe Restaurants",    sub:"Verified nearby",      accent:"#E68900" },
-    { id:"favorites",   icon:Heart,    label:"My Pantry",           sub:"Saved & trusted",      accent:"#D4306A" },
+    { id:"scanner",     icon:Camera,   label:"Escanear Producto",        sub:"Código de barras o etiqueta", accent:"#1E8E5A" },
+    { id:"ingredients", icon:Zap,      label:"Analizar Ingredientes", sub:"Pegar texto o fotografiar",  accent:"#5C63C8" },
+    { id:"restaurants", icon:MapPin,   label:"Restaurantes Seguros",    sub:"Verificados cerca de ti",      accent:"#E68900" },
+    { id:"favorites",   icon:Heart,    label:"Mi Despensa",           sub:"Guardados y de confianza",      accent:"#D4306A" },
   ];
 
   const stats = [
-    { label:"Scanned", value:"12", sub:"this week" },
-    { label:"Safe",    value:"9",  sub:"confirmed",  color: C.safe   },
-    { label:"Avoided", value:"3",  sub:"dangerous",  color: C.danger },
+    { label:"Escaneados", value:"12", sub:"esta semana" },
+    { label:"Seguros",    value:"9",  sub:"confirmados",  color: C.safe   },
+    { label:"Evitados", value:"3",  sub:"peligrosos",  color: C.danger },
   ];
 
   return (
@@ -374,7 +374,7 @@ function HomeScreen({ nav, setActiveProduct }) {
 
       <div style={{ padding:"8px 20px 0" }}>
         {/* Action grid */}
-        <SectionTitle>Quick Actions</SectionTitle>
+        <SectionTitle>Acciones Rápidas</SectionTitle>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:8 }}>
           {actions.map((a) => {
             const Icon = a.icon;
@@ -401,7 +401,7 @@ function HomeScreen({ nav, setActiveProduct }) {
         </div>
 
         {/* Recent scans */}
-        <SectionTitle action="See all" onAction={() => nav("favorites")}>
+        <SectionTitle action="Ver todo" onAction={() => nav("favorites")}>
           Recent Scans
         </SectionTitle>
         <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
@@ -449,7 +449,7 @@ function HomeScreen({ nav, setActiveProduct }) {
             <Sparkles size={20} color="#fff" strokeWidth={2} />
           </div>
           <div>
-            <p style={{ fontSize:13, fontWeight:800, color:C.safe, marginBottom:3 }}>Did you know?</p>
+            <p style={{ fontSize:13, fontWeight:800, color:C.safe, marginBottom:3 }}>¿Sabías que...?</p>
             <p style={{ fontSize:12, color:"#2D6B4E", lineHeight:1.5 }}>
               "Almidón modificado" can be wheat-based. Always check the origin!
             </p>
@@ -582,10 +582,10 @@ function ScannerScreen({ nav, setActiveProduct }) {
         borderTop:"1px solid rgba(255,255,255,.07)",
       }}>
         <p style={{ color:"#fff", fontSize:21, fontWeight:800, textAlign:"center", marginBottom:7, letterSpacing:-.3 }}>
-          {phase === "ready" ? "Point at a product label" : "Hold still…"}
+          {phase === "ready" ? "Apunta a la etiqueta del producto" : "No muevas el móvil…"}
         </p>
         <p style={{ color:"rgba(255,255,255,.4)", fontSize:13, textAlign:"center", marginBottom:28 }}>
-          {phase === "ready" ? "Barcode, ingredient list, or packaging" : "AI is reading every ingredient"}
+          {phase === "ready" ? "Código de barras, ingredientes o envase" : "La IA está leyendo cada ingrediente"}
         </p>
 
         <button onClick={phase === "ready" ? doScan : undefined}
@@ -598,7 +598,7 @@ function ScannerScreen({ nav, setActiveProduct }) {
             transition:"all .3s", letterSpacing:-.2,
             boxShadow: phase === "scanning" ? "none" : `0 6px 28px ${C.safe}60`,
           }}>
-          {phase === "scanning" ? "🔍 Analyzing…" : "📸 Tap to Scan"}
+          {phase === "scanning" ? "🔍 Analizando…" : "📸 Pulsa para Escanear"}
         </button>
 
         {/* Quick demo chips */}
@@ -635,8 +635,8 @@ function ResultScreen({ nav, product }) {
   const [reported, setReported] = useState(false);
 
   if (!product) return (
-    <EmptyState emoji="🔍" title="No product selected"
-      sub="Go back and scan a product first" cta="Scan Product" onCta={() => nav("scanner")} />
+    <EmptyState emoji="🔍" title="Ningún producto seleccionado"
+      sub="Vuelve atrás y escanea un producto primero" cta="Escanear Producto" onCta={() => nav("scanner")} />
   );
 
   const col = statusColor(product.status);
@@ -699,7 +699,7 @@ function ResultScreen({ nav, product }) {
             <ConfidenceRing score={product.confidence} status={product.status} />
             <div style={{ flex:1 }}>
               <p style={{ fontSize:15, fontWeight:800, color:C.text, marginBottom:5, letterSpacing:-.2 }}>
-                AI Confidence Score
+                Puntuación de Confianza IA
               </p>
               <p style={{ fontSize:12, color:C.sub, lineHeight:1.5 }}>
                 Based on ingredient database analysis and community reports
@@ -713,7 +713,7 @@ function ResultScreen({ nav, product }) {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <Users size={15} color={C.sub} />
               <span style={{ fontSize:13, color:C.sub, fontWeight:600 }}>
-                {product.community} community verifications
+                {product.community} verificaciones de la comunidad
               </span>
             </div>
             {product.verified && (
@@ -730,13 +730,13 @@ function ResultScreen({ nav, product }) {
         <Card style={{ marginBottom:14 }} className="slide-up">
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
             <h3 style={{ fontSize:16, fontWeight:800, color:C.text, letterSpacing:-.2 }}>
-              Ingredient Breakdown
+              Análisis de Ingredientes
             </h3>
             {product.ingredients.length > 3 && (
               <button onClick={() => setExpanded(!expanded)} style={{
                 fontSize:13, fontWeight:700, color:C.safe, background:"none", border:"none", cursor:"pointer",
               }}>
-                {expanded ? "Collapse" : `+${product.ingredients.length - 3} more`}
+                {expanded ? "Menos" : `+${product.ingredients.length - 3} más`}
               </button>
             )}
           </div>
@@ -778,7 +778,7 @@ function ResultScreen({ nav, product }) {
                 <Shield size={17} color="#fff" strokeWidth={2.5} />
               </div>
               <h3 style={{ fontSize:15, fontWeight:800, color:C.safe, letterSpacing:-.2 }}>
-                Safe Alternatives
+                Alternativas Seguras
               </h3>
             </div>
             {product.alternatives.map((alt, i) => (
@@ -809,7 +809,7 @@ function ResultScreen({ nav, product }) {
           }}>
             <Heart size={17} color={saved ? C.danger : C.sub}
               fill={saved ? C.danger : "none"} strokeWidth={2.5} />
-            {saved ? "Saved!" : "Save"}
+            {saved ? "¡Guardado!" : "Guardar"}
           </button>
           <button onClick={() => nav("scanner")} style={{
             flex:2, height:54, borderRadius:17, backgroundColor:C.safe,
@@ -818,7 +818,7 @@ function ResultScreen({ nav, product }) {
             boxShadow:`0 5px 20px ${C.safe}50`, letterSpacing:-.2,
           }}>
             <Camera size={17} color="#fff" strokeWidth={2.5} />
-            Scan another
+            Escanear otro
           </button>
         </div>
 
@@ -830,7 +830,7 @@ function ResultScreen({ nav, product }) {
           display:"flex", alignItems:"center", justifyContent:"center", gap:7,
         }}>
           <Info size={15} color={C.sub} />
-          {reported ? "Thanks for your report! ✓" : "Report incorrect info"}
+          {reported ? "¡Gracias por tu reporte! ✓" : "Reportar información incorrecta"}
         </button>
       </div>
     </div>
@@ -846,9 +846,9 @@ function IngredientsScreen({ nav }) {
   const [activeTab, setActiveTab] = useState("paste");
 
   const examples = [
-    { label:"🚨 Dangerous", text:"Agua, harina de trigo (62%), aceite de girasol, gluten de trigo, sal, levadura, azúcar" },
-    { label:"⚠️ Risky",     text:"Avena, azúcar, sal, almidón modificado, extracto de malta, jarabe de glucosa" },
-    { label:"✅ Safe",      text:"Arroz integral, agua, sal, aceite de oliva virgen extra, ajo en polvo, especias naturales" },
+    { label:"🚨 Peligroso", text:"Agua, harina de trigo (62%), aceite de girasol, gluten de trigo, sal, levadura, azúcar" },
+    { label:"⚠️ Con riesgo",     text:"Avena, azúcar, sal, almidón modificado, extracto de malta, jarabe de glucosa" },
+    { label:"✅ Seguro",      text:"Arroz integral, agua, sal, aceite de oliva virgen extra, ajo en polvo, especias naturales" },
   ];
 
   const doAnalyze = () => {
@@ -874,7 +874,7 @@ function IngredientsScreen({ nav }) {
       <div style={{ padding:"20px 20px 0", flexShrink:0 }}>
         <BackBtn onBack={() => nav("home")} />
         <h1 style={{ fontSize:26, fontWeight:800, color:C.text, marginTop:14, marginBottom:5, letterSpacing:-.4 }}>
-          Ingredient Analyzer
+          Analizador de Ingredientes
         </h1>
         <p style={{ fontSize:14, color:C.sub, marginBottom:18, fontWeight:500 }}>
           Detect hidden gluten in any ingredient list
@@ -884,9 +884,9 @@ function IngredientsScreen({ nav }) {
         {phase === "input" && (
           <div style={{ display:"flex", gap:8, marginBottom:16 }}>
             {[
-              { id:"paste",  icon:Zap,    label:"Paste text" },
-              { id:"camera", icon:Camera, label:"Camera"     },
-              { id:"upload", icon:Upload, label:"Upload"     },
+              { id:"paste",  icon:Zap,    label:"Pegar texto" },
+              { id:"camera", icon:Camera, label:"Cámara"     },
+              { id:"upload", icon:Upload, label:"Subir"     },
             ].map(t => {
               const Icon = t.icon;
               return (
@@ -913,7 +913,7 @@ function IngredientsScreen({ nav }) {
             {activeTab === "paste" ? (
               <>
                 <textarea value={text} onChange={e => setText(e.target.value)}
-                  placeholder={"Paste ingredient list here…\n\ne.g. Agua, Harina de trigo, Azúcar, Sal…"}
+                  placeholder={"Pega la lista de ingredientes aquí…\n\nej. Agua, Harina de trigo, Azúcar, Sal…"}
                   style={{
                     width:"100%", minHeight:158, borderRadius:20, padding:"16px 18px",
                     border:`2px solid ${text ? C.safeBorder : C.border}`,
@@ -948,7 +948,7 @@ function IngredientsScreen({ nav }) {
                   {activeTab === "camera" ? "📷" : "📁"}
                 </div>
                 <p style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:6 }}>
-                  {activeTab === "camera" ? "Take a photo" : "Upload label image"}
+                  {activeTab === "camera" ? "Tomar una foto" : "Subir imagen de etiqueta"}
                 </p>
                 <p style={{ fontSize:13, color:C.sub, marginBottom:20 }}>
                   OCR will extract and analyze the ingredients automatically
@@ -969,7 +969,7 @@ function IngredientsScreen({ nav }) {
               transition:"background .2s", letterSpacing:-.2,
               boxShadow: text.trim() ? `0 6px 24px ${C.safe}50` : "none",
             }}>
-              🔬 Analyze Ingredients
+              🔬 Analizar Ingredientes
             </button>
           </div>
         )}
@@ -989,7 +989,7 @@ function IngredientsScreen({ nav }) {
               AI Analyzing…
             </p>
             <p style={{ fontSize:14, color:C.sub, marginBottom:36, textAlign:"center" }}>
-              Checking against 1,200+ gluten markers<br />and hidden ingredient aliases
+              Verificando más de 1.200 marcadores de gluten<br />y alias de ingredientes ocultos
             </p>
             <div style={{ width:"100%", maxWidth:280 }}>
               <div style={{ height:7, backgroundColor:"#E0E5E0", borderRadius:100, overflow:"hidden" }}>
@@ -1022,15 +1022,15 @@ function IngredientsScreen({ nav }) {
                 fontSize:26, fontWeight:900, color:statusColor(result.status),
                 marginBottom:8, letterSpacing:-.4,
               }}>
-                {result.status === "safe"    ? "Looks Safe!" :
-                 result.status === "warning" ? "Caution Advised" : "Not Safe"}
+                {result.status === "safe"    ? "¡Parece Seguro!" :
+                 result.status === "warning" ? "Precaución Recomendada" : "No Apto"}
               </h2>
               <p style={{ fontSize:14, color:C.sub, marginBottom:20, lineHeight:1.5 }}>
                 {result.status === "safe"
-                  ? "No gluten markers detected in this ingredient list."
+                  ? "No se han detectado marcadores de gluten en esta lista."
                   : result.status === "warning"
-                  ? "Possible gluten-related ingredients found. Check with manufacturer."
-                  : "Confirmed gluten-containing ingredients detected. Avoid this product."}
+                  ? "Se han encontrado posibles ingredientes relacionados con el gluten. Consulta al fabricante."
+                  : "Ingredientes con gluten confirmados. Evita este producto."}
               </p>
               <ConfidenceRing score={result.confidence} status={result.status} size={80} />
             </div>
@@ -1132,9 +1132,9 @@ function RestaurantsScreen({ nav }) {
         {/* Filters */}
         <div style={{ display:"flex", gap:8, paddingBottom:16, overflowX:"auto" }}>
           {[
-            { id:"all",     label:"All" },
-            { id:"safe",    label:"✓ Certified Safe" },
-            { id:"warning", label:"⚠ With Caution"  },
+            { id:"all",     label:"Todos" },
+            { id:"safe",    label:"✓ Certificado Seguro" },
+            { id:"warning", label:"⚠ Con Precaución"  },
           ].map(f => (
             <button key={f.id} onClick={() => setFilter(f.id)} style={{
               flexShrink:0, padding:"9px 16px", borderRadius:100, fontSize:13, fontWeight:700,
@@ -1192,8 +1192,8 @@ function RestaurantsScreen({ nav }) {
       {/* List */}
       <div style={{ flex:1, overflowY:"auto", padding:"0 20px 100px" }}>
         {filtered.length === 0 ? (
-          <EmptyState emoji="🍽️" title="No restaurants found"
-            sub="Try a different filter or check back later" />
+          <EmptyState emoji="🍽️" title="No se encontraron restaurantes"
+            sub="Prueba otro filtro o vuelve más tarde" />
         ) : filtered.map((r, idx) => (
           <div key={r.id} className="tap-active slide-up" style={{
             backgroundColor:C.card, borderRadius:22, padding:20, marginBottom:14,
@@ -1275,7 +1275,7 @@ function RestaurantsScreen({ nav }) {
             <p style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:3 }}>
               Add a restaurant
             </p>
-            <p style={{ fontSize:12, color:C.sub }}>Help the community stay safe</p>
+            <p style={{ fontSize:12, color:C.sub }}>Ayuda a la comunidad a estar segura</p>
           </div>
         </div>
       </div>
@@ -1290,9 +1290,9 @@ function FavoritesScreen({ nav, setActiveProduct }) {
   const savedProducts    = PRODUCTS.filter(p => p.status === "safe");
   const savedRestaurants = RESTAURANTS.filter(r => r.savedByMe);
   const tabs = [
-    { id:"saved",       label:"Saved",       count:savedProducts.length + savedRestaurants.length },
-    { id:"history",     label:"History",     count:PRODUCTS.length   },
-    { id:"restaurants", label:"Restaurants", count:savedRestaurants.length },
+    { id:"saved",       label:"Guardados",       count:savedProducts.length + savedRestaurants.length },
+    { id:"history",     label:"Historial",     count:PRODUCTS.length   },
+    { id:"restaurants", label:"Restaurantes", count:savedRestaurants.length },
   ];
 
   return (
@@ -1336,9 +1336,9 @@ function FavoritesScreen({ nav, setActiveProduct }) {
         {tab === "saved" && (
           <div className="screen-enter">
             {savedProducts.length + savedRestaurants.length === 0 ? (
-              <EmptyState emoji="❤️" title="Nothing saved yet"
-                sub="Scan products or find restaurants and save them here for quick access."
-                cta="Start scanning" onCta={() => nav("scanner")} />
+              <EmptyState emoji="❤️" title="Nada guardado aún"
+                sub="Escanea productos o encuentra restaurantes y guárdalos aquí para acceso rápido."
+                cta="Empezar a escanear" onCta={() => nav("scanner")} />
             ) : (
               <>
                 {savedProducts.length > 0 && (
@@ -1440,9 +1440,9 @@ function FavoritesScreen({ nav, setActiveProduct }) {
         {tab === "restaurants" && (
           <div className="screen-enter">
             {savedRestaurants.length === 0 ? (
-              <EmptyState emoji="🍴" title="No saved restaurants"
-                sub="Explore safe restaurants near you and save your favorites."
-                cta="Explore restaurants" onCta={() => nav("restaurants")} />
+              <EmptyState emoji="🍴" title="Sin restaurantes guardados"
+                sub="Explora restaurantes seguros cerca de ti y guarda tus favoritos."
+                cta="Explorar restaurantes" onCta={() => nav("restaurants")} />
             ) : (
               <>
                 {savedRestaurants.map(r => (
@@ -1481,11 +1481,11 @@ function FavoritesScreen({ nav, setActiveProduct }) {
 // ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
 function BottomNav({ active, nav }) {
   const items = [
-    { id:"home",        icon:Home,    label:"Home"       },
-    { id:"ingredients", icon:Zap,     label:"Analyze"    },
-    { id:"scanner",     icon:Camera,  label:"Scan",  center:true },
-    { id:"restaurants", icon:MapPin,  label:"Nearby"     },
-    { id:"favorites",   icon:Heart,   label:"Pantry"     },
+    { id:"home",        icon:Home,    label:"Inicio"       },
+    { id:"ingredients", icon:Zap,     label:"Analizar"    },
+    { id:"scanner",     icon:Camera,  label:"Escanear",  center:true },
+    { id:"restaurants", icon:MapPin,  label:"Cercanos"     },
+    { id:"favorites",   icon:Heart,   label:"Despensa"     },
   ];
 
   const isActive = (id) => {
