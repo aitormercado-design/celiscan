@@ -1,4 +1,4 @@
-# CeliScan 🛡️
+# Marisinglu 🛡️
 
 **Instantly check if a product is safe for celiac disease and gluten intolerance.**
 
