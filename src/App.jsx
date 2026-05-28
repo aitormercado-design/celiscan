@@ -165,20 +165,30 @@ function HomeScreen() {
 
   return(
     <div style={{height:"100%",overflowY:"auto",backgroundColor:T.bg}}>
-      {/* Header */}
-      <div style={{padding:"40px 24px 18px"}}>
-        <p style={{fontSize:12,color:T.tertiary,fontWeight:500,letterSpacing:.5,
-          textTransform:"uppercase",marginBottom:10}}>{greeting}</p>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <h1 style={{fontSize:27,fontWeight:800,color:T.primary,letterSpacing:"-1px",lineHeight:1.08}}>
-            Noticias<br/>celiaquía
-          </h1>
-          <img src="/logo.png" alt="Marisinglu"
-            style={{width:68,height:68,objectFit:"contain",flexShrink:0,
-              mixBlendMode:"multiply"}}/>
+      {/* Branded header with gradient */}
+      <div style={{
+        background:"linear-gradient(160deg, #C8E6F5 0%, #D4EDE0 55%, #FAFAF8 100%)",
+        padding:"36px 28px 28px",
+        borderBottom:"1px solid rgba(0,0,0,.06)",
+        display:"flex", flexDirection:"column", alignItems:"center",
+        textAlign:"center",
+      }}>
+        <img src="/logo.png" alt="Marisinglu"
+          style={{width:110, height:110, objectFit:"contain", marginBottom:4,
+            filter:"drop-shadow(0 4px 16px rgba(0,0,0,.15))"}}/>
+        <p style={{fontSize:12, color:"#5A7A6A", fontWeight:600,
+          letterSpacing:.6, textTransform:"uppercase"}}>Tu vida sin gluten</p>
+      </div>
+
+      {/* Section title */}
+      <div style={{padding:"22px 24px 0"}}>
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+          <h2 style={{fontSize:20, fontWeight:800, color:T.primary, letterSpacing:"-.5px"}}>
+            Noticias de hoy
+          </h2>
+          <span style={{fontSize:11, color:T.tertiary, fontWeight:500}}>España</span>
         </div>
       </div>
-      <div style={{height:1,backgroundColor:T.line,margin:"0 24px"}}/>
 
       {/* List */}
       <div style={{padding:"0 24px 100px"}}>
@@ -285,12 +295,9 @@ Sin etiqueta visible: {"error":"No se detecta etiqueta"}`}
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={shoot} style={{display:"none"}}/>
-      <div style={{width:100,height:100,borderRadius:50,backgroundColor:"#fff",
-        display:"flex",alignItems:"center",justifyContent:"center",marginBottom:36,
-        boxShadow:"0 6px 24px rgba(0,0,0,.4)"}}>
-        <img src="/logo.png" alt="Marisinglu"
-          style={{width:90,height:90,objectFit:"contain"}}/>
-      </div>
+      <img src="/logo.png" alt="Marisinglu"
+        style={{width:100, height:100, objectFit:"contain", marginBottom:36,
+          filter:"drop-shadow(0 6px 20px rgba(0,0,0,.5))"}}/>
       <div style={{position:"relative",width:200,height:200,marginBottom:48}}>
         {[{t:0,l:0,bt:"1.5px solid rgba(255,255,255,.65)",bl:"1.5px solid rgba(255,255,255,.65)"},
           {t:0,r:0,bt:"1.5px solid rgba(255,255,255,.65)",br:"1.5px solid rgba(255,255,255,.65)"},
