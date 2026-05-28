@@ -168,7 +168,7 @@ function AppHeader({ subtitle }) {
       display: "flex", alignItems: "center", gap: 14, flexShrink: 0,
     }}>
       <img src="/logo.png" alt="Marisinglu"
-        style={{ width: 80, height: 80, objectFit: "contain", flexShrink: 0,
+        style={{ width: 150, height: 150, objectFit: "contain", flexShrink: 0,
           filter: "drop-shadow(0 3px 8px rgba(0,0,0,.2))" }}/>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1A3A2A",
@@ -332,7 +332,7 @@ Sin etiqueta visible: {"error":"No se detecta etiqueta"}`}
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={shoot} style={{display:"none"}}/>
       <img src="/logo.png" alt="Marisinglu"
-        style={{width:100, height:100, objectFit:"contain", marginBottom:36,
+        style={{width:150, height:150, objectFit:"contain", marginBottom:36,
           filter:"drop-shadow(0 6px 20px rgba(0,0,0,.5))"}}/>
       <div style={{position:"relative",width:200,height:200,marginBottom:48}}>
         {[{t:0,l:0,bt:"1.5px solid rgba(255,255,255,.65)",bl:"1.5px solid rgba(255,255,255,.65)"},
