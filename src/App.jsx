@@ -531,8 +531,9 @@ Sin etiqueta visible: {"error":"No se detecta etiqueta"}`}
 function RestaurantesScreen() {
   const [loc,setLoc]     = useState(null);
   const [sel,setSel]     = useState(null);
-  const [selInfo,setSelInfo] = useState(null); // null | "loading" | {...}
-  const [photoPhase,setPhotoPhase] = useState("idle"); // idle|analyzing|result|error
+  const [selInfo,setSelInfo] = useState(null);
+  const [mapError,setMapError] = useState(null);   // red banner for map load errors
+  const [photoPhase,setPhotoPhase] = useState("idle");
   const [photoResult,setPhotoResult] = useState(null);
 
   const mapRef    = useRef(null);
@@ -590,20 +591,23 @@ function RestaurantesScreen() {
       renderMarkers(mockRests(loc.lat, loc.lng));
 
       // Try Overpass in background — replace mocks if we get real data
-      const tryOverpass = (fetcher) =>
+      const tryOverpass = (fetcher, onFail) =>
         fetcher()
-          .then(rests => { if (!dead && rests.length > 0) renderMarkers(rests); })
-          .catch(() => {}); // keep mocks on error
+          .then(rests => { if (!dead && rests.length > 0) { setMapError(null); renderMarkers(rests); } })
+          .catch(e => { if (!dead && onFail) setMapError(onFail); });
 
-      tryOverpass(() => fetchByRadius(loc.lat, loc.lng, 1500));
+      tryOverpass(
+        () => fetchByRadius(loc.lat, loc.lng, 1500),
+        "No se pudieron cargar restaurantes reales. Mostrando datos de ejemplo."
+      );
 
       // On map move: reload visible area (keep mocks if Overpass fails)
       map.on("moveend", () => {
         const b = map.getBounds();
-        tryOverpass(() => fetchByBbox({
-          south: b.getSouth(), north: b.getNorth(),
-          west:  b.getWest(),  east:  b.getEast(),
-        }));
+        tryOverpass(
+          () => fetchByBbox({ south:b.getSouth(), north:b.getNorth(), west:b.getWest(), east:b.getEast() }),
+          "Error al cargar restaurantes del área. Comprueba tu conexión."
+        );
       });
 
       mapInst.current = map;
@@ -611,13 +615,12 @@ function RestaurantesScreen() {
     return()=>{dead=true;if(mapInst.current){mapInst.current.remove();mapInst.current=null;}};
   },[loc]);
 
-  // Load restaurant info when selected
   useEffect(()=>{
     if(!sel) return;
     setSelInfo("loading");
     getRestaurantInfo(sel)
       .then(d=>setSelInfo(d))
-      .catch(()=>setSelInfo({error:true}));
+      .catch(e=>setSelInfo({error:true, message: e?.message || "Error al consultar la IA. Comprueba que VITE_GEMINI_API_KEY está configurada en Vercel."}));
   },[sel]);
 
   // Photo analysis
@@ -724,7 +727,23 @@ JSON sin backticks:
           {!loc&&<div className="shimmer" style={{width:"100%",height:"100%"}}/>}
         </div>
 
-        {/* Legend — bottom left inside map */}
+        {/* Red error banner — map load failures */}
+        {mapError && (
+          <div style={{position:"absolute",top:12,left:12,right:12,zIndex:1000,
+            backgroundColor:"#FEE2E2",border:"1px solid #FCA5A5",borderRadius:12,
+            padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:10}}>
+            <span style={{fontSize:16,flexShrink:0,marginTop:1}}>🔴</span>
+            <div style={{flex:1}}>
+              <p style={{fontSize:12,fontWeight:700,color:"#991B1B",marginBottom:2}}>
+                Error al cargar restaurantes
+              </p>
+              <p style={{fontSize:11,color:"#B91C1C",lineHeight:1.5}}>{mapError}</p>
+            </div>
+            <button onClick={()=>setMapError(null)}
+              style={{background:"none",border:"none",cursor:"pointer",
+                color:"#B91C1C",fontSize:16,lineHeight:1,flexShrink:0}}>✕</button>
+          </div>
+        )}
         <div style={{position:"absolute",bottom:16,left:16,zIndex:1000,
           backgroundColor:"rgba(255,255,255,.94)",backdropFilter:"blur(10px)",
           borderRadius:12,padding:"10px 14px",boxShadow:"0 2px 12px rgba(0,0,0,.1)"}}>
@@ -900,11 +919,21 @@ JSON sin backticks:
                 );
               })()}
 
-              {/* Error fallback */}
+              {/* Red error banner — restaurant info failures */}
               {selInfo?.error&&(
-                <p style={{fontSize:14,color:T.secondary,lineHeight:1.6,paddingTop:8}}>
-                  No se pudo cargar información adicional. Comprueba la conexión y toca el restaurante de nuevo.
-                </p>
+                <div style={{backgroundColor:"#FEE2E2",border:"1px solid #FCA5A5",
+                  borderRadius:12,padding:"12px 14px",marginTop:8,
+                  display:"flex",alignItems:"flex-start",gap:10}}>
+                  <span style={{fontSize:16,flexShrink:0}}>🔴</span>
+                  <div>
+                    <p style={{fontSize:13,fontWeight:700,color:"#991B1B",marginBottom:4}}>
+                      No se pudo obtener información
+                    </p>
+                    <p style={{fontSize:12,color:"#B91C1C",lineHeight:1.55}}>
+                      {selInfo.message}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
