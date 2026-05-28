@@ -76,6 +76,11 @@ const OVERPASS = [
   "https://overpass.kumi.systems/api/interpreter",
 ];
 
+const withTimeout = (promise, ms) => Promise.race([
+  promise,
+  new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+]);
+
 const parseElements = (elements) =>
   (elements || []).filter(e => e.tags?.name).map(e => ({
     id: String(e.id), name: e.tags.name, lat: e.lat, lng: e.lon,
@@ -91,64 +96,34 @@ const overpassFetch = async (q) => {
   const encoded = encodeURIComponent(q);
   for (const base of OVERPASS) {
     try {
-      const r = await fetch(`${base}?data=${encoded}`,
-        { signal: AbortSignal.timeout(12000) });
+      const r = await withTimeout(fetch(`${base}?data=${encoded}`), 10000);
       if (!r.ok) continue;
       const d = await r.json();
       const rests = parseElements(d.elements);
       if (rests.length > 0) return rests;
-    } catch {}
+    } catch (e) {
+      // try next endpoint
+    }
   }
   return [];
 };
 
 const fetchByRadius = (lat, lng, radius = 1500) =>
-  overpassFetch(`[out:json][timeout:12];(node["amenity"~"restaurant|cafe|bar|fast_food"](around:${radius},${lat},${lng}););out 60;`);
+  overpassFetch(`[out:json][timeout:10];(node["amenity"~"restaurant|cafe|bar|fast_food"](around:${radius},${lat},${lng}););out 60;`);
 
 const fetchByBbox = ({ south, north, west, east }) =>
-  overpassFetch(`[out:json][timeout:12];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 80;`);
+  overpassFetch(`[out:json][timeout:10];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 80;`);
 
 // Restaurant info via Gemini ─────────────────────────────────
 const getRestaurantInfo = async (rest) => {
-  const key = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!key) throw new Error("Falta VITE_GEMINI_API_KEY");
-
   const prompt = `Eres un experto en celiaquía en España. Proporciona información práctica sobre el restaurante "${rest.name}" (cocina: ${rest.cuisine}${rest.address ? `, ${rest.address}` : ""}) para una persona celíaca.
 
-Responde ÚNICAMENTE con JSON válido sin backticks:
+Responde ÚNICAMENTE con JSON válido sin backticks ni texto extra:
 {"safety":"safe/warning/danger","safetyReason":"razón del nivel en 1 frase","description":"descripción del tipo de restaurante en 2 frases","celiacInfo":"información sobre gluten y riesgo de contaminación cruzada en este tipo de cocina","menuOptions":["plato o categoría habitualmente segura","otro"],"warnings":["riesgo concreto si aplica"],"advice":"consejo práctico para el celíaco al entrar"}`;
 
-  // Try gemini-2.0-flash with search first, fall back to gemini-1.5-flash
-  const models = [
-    { model: "gemini-2.0-flash", tools: [{ google_search: {} }] },
-    { model: "gemini-1.5-flash", tools: undefined },
-  ];
-
-  for (const { model, tools } of models) {
-    try {
-      const body = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 900 },
-      };
-      if (tools) body.tools = tools;
-
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body), signal: AbortSignal.timeout(15000) }
-      );
-      const d = await res.json();
-      if (d.error) continue; // try next model
-
-      const text = (d.candidates?.[0]?.content?.parts || [])
-        .filter(p => p.text).map(p => p.text).join("");
-      if (!text) continue;
-
-      try { return safeJSON(text); }
-      catch { return { rawText: text }; }
-    } catch {}
-  }
-  throw new Error("No se pudo obtener información");
+  const text = await callGemini([{ text: prompt }]);
+  try { return safeJSON(text); }
+  catch { return { rawText: text }; }
 };
 
 // Distance ────────────────────────────────────────────────────
