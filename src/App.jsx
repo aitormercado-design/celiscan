@@ -163,20 +163,24 @@ function AppHeader({ subtitle }) {
   return (
     <div style={{
       background: "linear-gradient(135deg, #BFD9EE 0%, #C8E8D4 60%, #EEF5EE 100%)",
-      padding: "18px 20px 16px",
       borderBottom: "1px solid rgba(0,0,0,.07)",
-      display: "flex", alignItems: "center", gap: 14, flexShrink: 0,
+      display: "flex", alignItems: "center", gap: 16,
+      flexShrink: 0, overflow: "hidden",
+      padding: "10px 18px 10px 10px",
+      minHeight: 0,
     }}>
       <img src="/logo.png" alt="Marisinglu"
-        style={{ width: 150, height: 150, objectFit: "contain", flexShrink: 0,
+        style={{ width: 200, height: 200, objectFit: "contain", flexShrink: 0,
+          display: "block",
           filter: "drop-shadow(0 3px 8px rgba(0,0,0,.2))" }}/>
-      <div>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1A3A2A",
-          letterSpacing: "-0.7px", lineHeight: 1.1, marginBottom: 3 }}>
+      <div style={{ minWidth: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: "#1A3A2A",
+          letterSpacing: "-0.7px", lineHeight: 1.1, marginBottom: 5,
+          whiteSpace: "nowrap" }}>
           Marisinglu
         </h1>
         <p style={{ fontSize: 12, color: "#4A7A5A", fontWeight: 600,
-          letterSpacing: 0.3 }}>
+          letterSpacing: 0.3, lineHeight: 1.5 }}>
           {subtitle || "Tu vida sin gluten"}
         </p>
       </div>
@@ -332,7 +336,7 @@ Sin etiqueta visible: {"error":"No se detecta etiqueta"}`}
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={shoot} style={{display:"none"}}/>
       <img src="/logo.png" alt="Marisinglu"
-        style={{width:150, height:150, objectFit:"contain", marginBottom:36,
+        style={{width:200, height:200, objectFit:"contain", marginBottom:28,
           filter:"drop-shadow(0 6px 20px rgba(0,0,0,.5))"}}/>
       <div style={{position:"relative",width:200,height:200,marginBottom:48}}>
         {[{t:0,l:0,bt:"1.5px solid rgba(255,255,255,.65)",bl:"1.5px solid rgba(255,255,255,.65)"},
