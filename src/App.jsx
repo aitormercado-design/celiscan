@@ -222,11 +222,9 @@ Responde ÚNICAMENTE con un array JSON válido (sin backticks, sin texto extra):
               Sin gluten,<br/><span style={{ color:C.safe }}>sin preocupaciones</span>
             </h1>
           </div>
-          <div style={{ width:50, height:50, borderRadius:17, backgroundColor:C.safe,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow:`0 6px 20px ${C.safe}50` }}>
-            <Shield size={24} color="#fff" strokeWidth={2.5}/>
-          </div>
+          <img src="/logo.png" alt="CeliScan"
+            style={{ width:56, height:56, borderRadius:18, objectFit:"cover",
+              boxShadow:`0 6px 20px rgba(0,0,0,.12)` }}/>
         </div>
       </div>
 
@@ -351,11 +349,10 @@ Si no ves una etiqueta de producto: {"error":"No se detecta etiqueta en la image
         backgroundImage:"linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)",
         backgroundSize:"40px 40px", pointerEvents:"none" }}/>
       <div style={{ textAlign:"center", position:"relative", zIndex:1 }}>
-        <div style={{ width:130, height:130, borderRadius:40,
-          backgroundColor:"rgba(30,142,90,.18)", border:`2px solid ${C.safe}35`,
-          display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 32px" }}>
-          <Camera size={60} color={C.safe} strokeWidth={1.6}/>
-        </div>
+        <img src="/logo.png" alt="CeliScan"
+            style={{ width:110, height:110, borderRadius:32, objectFit:"cover",
+              margin:"0 auto 32px", display:"block",
+              boxShadow:"0 8px 32px rgba(0,0,0,.35)" }}/>
         <h2 style={{ color:"#fff", fontSize:26, fontWeight:800, marginBottom:12, letterSpacing:-.4 }}>
           Escanear Producto
         </h2>
@@ -913,10 +910,10 @@ function BottomNav({ active, nav }) {
           <button key={item.id} onClick={() => nav("scan")} style={{ display:"flex",
             flexDirection:"column", alignItems:"center", background:"none",
             border:"none", cursor:"pointer", marginTop:-22 }}>
-            <div style={{ width:60, height:60, borderRadius:22, backgroundColor:C.safe,
-              display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow:`0 6px 24px ${C.safe}60`, border:"3px solid #fff" }}>
-              <Camera size={26} color="#fff" strokeWidth={2}/>
+            <div style={{ width:60, height:60, borderRadius:22, overflow:"hidden",
+              boxShadow:`0 6px 24px ${C.safe}60`, border:"3px solid #fff", flexShrink:0 }}>
+              <img src="/logo.png" alt="Escanear"
+                style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
             </div>
             <span style={{ fontSize:10, color:C.safe, marginTop:5, fontWeight:800 }}>Escanear</span>
           </button>
