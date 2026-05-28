@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Home, Camera, MapPin, ArrowLeft, RefreshCw, ExternalLink, ChevronRight } from "lucide-react";
+import { Home, Camera, MapPin, ArrowLeft, RefreshCw, ChevronRight } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────
 const T = {
@@ -651,8 +651,8 @@ JSON sin backticks:
         {!loc&&<div className="shimmer" style={{width:"100%",height:"100%"}}/>}
       </div>
 
-      {/* Analyze photo button — top right */}
-      <div style={{position:"absolute",top:18,right:16,zIndex:1000}}>
+      {/* Analyze photo button — bottom right */}
+      <div style={{position:"absolute",bottom:104,right:16,zIndex:1000}}>
         <button onClick={()=>inputRef.current?.click()} className="press"
           style={{backgroundColor:"rgba(10,10,10,.85)",backdropFilter:"blur(10px)",
             border:"none",borderRadius:12,padding:"10px 14px",cursor:"pointer",
