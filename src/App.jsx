@@ -42,24 +42,25 @@ const CSS = `
   .tap-active:active{transform:scale(.97);transition:transform .1s;}
 `;
 
-// ── API ───────────────────────────────────────────────────────
-const callClaude = async (body) => {
-  const headers = { "Content-Type": "application/json" };
-  const key = import.meta?.env?.VITE_ANTHROPIC_API_KEY;
-  if (key) {
-    headers["x-api-key"] = key;
-    headers["anthropic-version"] = "2023-06-01";
-    headers["anthropic-dangerous-direct-browser-access"] = "true";
-  }
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST", headers, body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
-};
+// ── Gemini Flash (free tier: 1500 req/day) ───────────────────
+const GEMINI_MODEL = "gemini-1.5-flash";
 
-const extractText = (data) =>
-  (data?.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+const callGemini = async (parts) => {
+  const key = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!key) throw new Error("Falta VITE_GEMINI_API_KEY en las variables de entorno de Vercel");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1500 },
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+};
 
 const parseJSON = (text) => {
   const clean = text.replace(/```json|```/g, "").trim();
@@ -185,22 +186,11 @@ function HomeScreen() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const data = await callClaude({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-        messages: [{
-          role: "user",
-          content: `Busca en internet las 5 noticias MÁS RECIENTES e importantes de esta semana sobre celiaquía, 
-gluten o enfermedad celíaca en España. Deben ser noticias reales con URL real.
-
-Responde ÚNICAMENTE con un array JSON válido (sin backticks, sin texto extra):
-[{"title":"...","summary":"Resumen en máximo 2 frases.","url":"https://...","source":"nombre del medio","date":"Hoy/Hace X días/Esta semana"}]`
-        }]
-      });
-      const parsed = parseJSON(extractText(data));
-      if (!Array.isArray(parsed) || !parsed.length) throw new Error("sin datos");
-      setNews(parsed.slice(0,5));
+      const res = await fetch("/api/news");
+      if (!res.ok) throw new Error("RSS error");
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) throw new Error("sin datos");
+      setNews(data.slice(0, 5));
     } catch {
       setError(true);
     } finally {
@@ -305,30 +295,15 @@ function ScanScreen() {
     setPhase("analyzing");
     try {
       const { data, type } = await fileToBase64(file);
-      const res = await callClaude({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1400,
-        messages: [{
-          role: "user",
-          content: [
-            { type:"image", source:{ type:"base64", media_type:type, data } },
-            { type:"text", text:`Eres un experto en celiaquía. Analiza esta imagen de etiqueta o producto alimentario.
+      const geminiText = await callGemini([
+        { inline_data: { mime_type: type, data } },
+        { text: `Eres un experto en celiaquía. Analiza esta imagen de etiqueta o producto alimentario.
 
-Responde ÚNICAMENTE con JSON (sin backticks):
-{
-  "status": "safe"|"warning"|"danger",
-  "confidence": 0-100,
-  "productName": "nombre si visible o null",
-  "brand": "marca si visible o null",
-  "ingredients": [{"name":"...","risk":"safe"|"warning"|"danger","note":"...opcional"}],
-  "reason": "Explicación clara en español del resultado",
-  "alternatives": ["alternativa segura..."]
-}
-Si no ves una etiqueta de producto: {"error":"No se detecta etiqueta en la imagen"}` }
-          ]
-        }]
-      });
-      const parsed = parseJSON(extractText(res));
+Responde ÚNICAMENTE con JSON válido sin backticks:
+{"status":"safe/warning/danger","confidence":0-100,"productName":"nombre o null","brand":"marca o null","ingredients":[{"name":"...","risk":"safe/warning/danger","note":"opcional"}],"reason":"Explicación en español","alternatives":["alternativa..."]}
+Si no ves etiqueta: {"error":"No se detecta etiqueta en la imagen"}` }
+      ]);
+      const parsed = parseJSON(geminiText);
       if (parsed.error) { setErrMsg(parsed.error); setPhase("error"); }
       else { setResult(parsed); setPhase("result"); }
     } catch(err) {
@@ -613,32 +588,15 @@ function RestaurantsScreen({ favorites, toggleFavorite }) {
       const { data, type } = await fileToBase64(file);
       const ctx = selectedRest
         ? `El restaurante se llama "${selectedRest.name}", cocina: ${selectedRest.cuisine}.` : "";
-      const res = await callClaude({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1400,
-        messages:[{
-          role:"user",
-          content:[
-            { type:"image", source:{ type:"base64", media_type:type, data } },
-            { type:"text", text:`Analiza esta imagen de restaurante para una persona celíaca. ${ctx}
+      const geminiText = await callGemini([
+        { inline_data: { mime_type: type, data } },
+        { text: `Analiza esta imagen de restaurante para una persona celíaca. ${ctx}
 La imagen puede ser fachada, menú, carta, interior o platos.
 
-Responde ÚNICAMENTE con JSON (sin backticks):
-{
-  "restaurantName": "nombre si visible o null",
-  "status": "safe"|"warning"|"danger",
-  "confidence": 0-100,
-  "summary": "2-3 frases sobre seguridad celíaca",
-  "positives": ["punto positivo..."],
-  "warnings": ["advertencia..."],
-  "glutenFreeOptions": ["opción sin gluten..."],
-  "questionsToAsk": ["pregunta para el camarero..."],
-  "recommendations": ["recomendación..."]
-}` }
-          ]
-        }]
-      });
-      const parsed = parseJSON(extractText(res));
+Responde ÚNICAMENTE con JSON válido sin backticks:
+{"restaurantName":"nombre o null","status":"safe/warning/danger","confidence":0-100,"summary":"2-3 frases sobre seguridad celíaca","positives":["..."],"warnings":["..."],"glutenFreeOptions":["..."],"questionsToAsk":["..."],"recommendations":["..."]}` }
+      ]);
+      const parsed = parseJSON(geminiText);
       setAnalyzeResult(parsed);
       setAnalyzePhase("result");
     } catch {
