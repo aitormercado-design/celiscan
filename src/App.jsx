@@ -162,8 +162,7 @@ function HomeScreen() {
             Noticias<br/>celiaquía
           </h1>
           <img src="/logo.png" alt="Marisinglu"
-            style={{width:56,height:56,borderRadius:16,objectFit:"cover",
-              boxShadow:"0 2px 12px rgba(0,0,0,.1)",flexShrink:0}}/>
+            style={{width:64,height:64,objectFit:"contain",flexShrink:0}}/>
         </div>
       </div>
       <div style={{height:1,backgroundColor:T.line,margin:"0 24px"}}/>
@@ -273,8 +272,8 @@ Sin etiqueta visible: {"error":"No se detecta etiqueta"}`}
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={shoot} style={{display:"none"}}/>
-      <img src="/logo.png" alt="Marisinglu" style={{width:68,height:68,borderRadius:18,objectFit:"cover",
-        marginBottom:36,boxShadow:"0 8px 28px rgba(0,0,0,.5)"}}/>
+      <img src="/logo.png" alt="Marisinglu" style={{width:88,height:88,objectFit:"contain",
+        marginBottom:36}}/>
       <div style={{position:"relative",width:200,height:200,marginBottom:48}}>
         {[{t:0,l:0,bt:"1.5px solid rgba(255,255,255,.65)",bl:"1.5px solid rgba(255,255,255,.65)"},
           {t:0,r:0,bt:"1.5px solid rgba(255,255,255,.65)",br:"1.5px solid rgba(255,255,255,.65)"},
