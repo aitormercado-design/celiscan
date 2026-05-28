@@ -86,29 +86,43 @@ const fetchByBbox = async ({south,north,west,east}) => {
   }));
 };
 
-// Restaurant info via Gemini ───────────────────────────────────
+// Restaurant info via Gemini 2.0 Flash + Google Search (gratis en free tier) ──
 const getRestaurantInfo = async (rest) => {
-  const ctx = Object.entries(rest.tags||{})
-    .filter(([k])=>!k.startsWith("source")&&!k.startsWith("tiger")&&k!=="name")
-    .map(([k,v])=>`${k}: ${v}`).join("; ");
+  const key = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!key) throw new Error("Falta VITE_GEMINI_API_KEY");
 
-  const txt = await callGemini([{text:`
-Restaurante: "${rest.name}" | Cocina: ${rest.cuisine} | Dirección: ${rest.address||"sin datos"}.
-Datos adicionales OpenStreetMap: ${ctx||"sin datos adicionales"}.
+  const prompt = `Busca en internet información real y actualizada sobre el restaurante "${rest.name}" \
+(cocina: ${rest.cuisine}${rest.address ? `, ubicado en ${rest.address}` : ""}, España) \
+para una persona celíaca o con intolerancia al gluten.
 
-Eres un experto en celiaquía en España. Proporciona información práctica sobre este restaurante para una persona celíaca.
+Responde ÚNICAMENTE con JSON sin backticks ni texto extra:
+{"safety":"safe/warning/danger","safetyReason":"razón breve del nivel","description":"descripción del restaurante en 2 frases","celiacInfo":"info real sobre opciones sin gluten, alergenos y contaminación cruzada en este restaurante","menuOptions":["opción habitualmente segura 1","opción 2"],"warnings":["advertencia concreta si la hay"],"advice":"consejo práctico directo para entrar a este restaurante siendo celíaco"}`;
 
-JSON sin backticks ni texto extra:
-{
-  "safety": "safe" | "warning" | "danger",
-  "safetyReason": "razón del nivel en 1 frase corta",
-  "description": "descripción del tipo de restaurante en 2 frases",
-  "celiacInfo": "información específica sobre gluten, contaminación cruzada y seguridad en este tipo de cocina",
-  "menuOptions": ["plato o categoría de plato habitualmente seguro", "otro"],
-  "warnings": ["riesgo específico 1", "riesgo 2 si aplica"],
-  "advice": "consejo práctico directo para el celíaco al entrar en este restaurante"
-}`}]);
-  return safeJSON(txt);
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 900 },
+      }),
+    }
+  );
+
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+
+  const text = (d.candidates?.[0]?.content?.parts || [])
+    .filter(p => p.text).map(p => p.text).join("");
+
+  try {
+    return safeJSON(text);
+  } catch {
+    // Si Gemini responde en prosa en lugar de JSON, lo mostramos como texto
+    return { rawText: text };
+  }
 };
 
 // Distance ────────────────────────────────────────────────────
@@ -715,6 +729,13 @@ JSON sin backticks:
 
               {/* Info loaded */}
               {selInfo&&selInfo!=="loading"&&!selInfo.error&&(()=>{
+                // Fallback: Gemini responded in prose instead of JSON
+                if (selInfo.rawText) return (
+                  <p style={{fontSize:14,color:T.secondary,lineHeight:1.7,paddingTop:4}}>
+                    {selInfo.rawText}
+                  </p>
+                );
+
                 const st=S[selInfo.safety]||S.warning;
                 return(
                   <>
