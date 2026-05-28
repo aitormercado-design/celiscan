@@ -65,13 +65,16 @@ function clean(s) {
 }
 function strip(s) {
   return s
-    .replace(/<[^>]+>/g, " ")       // remove HTML tags
-    .replace(/&lt;[^&]*&gt;/g, " ") // remove encoded tags like &lt;a href...&gt;
-    .replace(/&lt;/g, "")           // leftover &lt;
-    .replace(/&gt;/g, "")           // leftover &gt;
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&lt;[^&]*&gt;/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "")
+    .replace(/&gt;/g, "")
     .replace(/&amp;/g, "&")
-    .replace(/https?:\/\/\S+/g, "") // remove raw URLs
-    .replace(/href="[^"]*"/g, "")   // remove href attributes
+    .replace(/&quot;/g, '"')
+    .replace(/&#\d+;/g, " ")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/href="[^"]*"/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }

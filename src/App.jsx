@@ -139,23 +139,18 @@ function AppHeader({ subtitle }) {
     <div style={{
       background: "linear-gradient(135deg, #BFD9EE 0%, #C8E8D4 60%, #EEF5EE 100%)",
       borderBottom: "1px solid rgba(0,0,0,.07)",
-      display: "flex", alignItems: "center", gap: 16,
-      flexShrink: 0, overflow: "hidden",
-      padding: "10px 18px 10px 10px",
-      minHeight: 0,
+      display: "flex", alignItems: "center", gap: 12,
+      flexShrink: 0, padding: "10px 16px",
     }}>
       <img src="/logo.png" alt="Marisinglu"
-        style={{ width: 200, height: 200, objectFit: "contain", flexShrink: 0,
-          display: "block",
-          filter: "drop-shadow(0 3px 8px rgba(0,0,0,.2))" }}/>
+        style={{ width: 72, height: 72, objectFit: "contain", flexShrink: 0,
+          filter: "drop-shadow(0 2px 6px rgba(0,0,0,.18))" }}/>
       <div style={{ minWidth: 0 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: "#1A3A2A",
-          letterSpacing: "-0.7px", lineHeight: 1.1, marginBottom: 5,
-          whiteSpace: "nowrap" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1A3A2A",
+          letterSpacing: "-0.6px", lineHeight: 1.1, marginBottom: 3 }}>
           Marisinglu
         </h1>
-        <p style={{ fontSize: 12, color: "#4A7A5A", fontWeight: 600,
-          letterSpacing: 0.3, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: "#4A7A5A", fontWeight: 600, letterSpacing: 0.2 }}>
           {subtitle || "Tu vida sin gluten"}
         </p>
       </div>
