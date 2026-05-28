@@ -70,20 +70,32 @@ const getL = () => _L || (_L = new Promise(ok=>{
   s.onload=()=>ok(window.L); document.head.appendChild(s);
 }));
 
-// ── Overpass bbox fetch ───────────────────────────────────────
-const fetchByBbox = async ({south,north,west,east}) => {
-  const q=`[out:json][timeout:20];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 60;`;
+// ── Overpass fetch ────────────────────────────────────────────
+const parseElements = (elements) =>
+  (elements || []).filter(e => e.tags?.name).map(e => ({
+    id: String(e.id), name: e.tags.name, lat: e.lat, lng: e.lon,
+    cuisine: (e.tags.cuisine || "Restaurante").replace(/_/g, " "),
+    address: [e.tags["addr:street"], e.tags["addr:housenumber"]].filter(Boolean).join(" "),
+    glutenFree: e.tags["diet:gluten_free"] === "yes",
+    website: e.tags.website || e.tags["contact:website"] || "",
+    phone: e.tags.phone || e.tags["contact:phone"] || "",
+    tags: e.tags,
+  }));
+
+// Initial load: radius around a point (reliable, no bounds needed)
+const fetchByRadius = async (lat, lng, radius = 1000) => {
+  const q = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|bar|fast_food"](around:${radius},${lat},${lng}););out 50;`;
   const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
   const d = await r.json();
-  return (d.elements||[]).filter(e=>e.tags?.name).map(e=>({
-    id:String(e.id), name:e.tags.name, lat:e.lat, lng:e.lon,
-    cuisine:(e.tags.cuisine||"Restaurante").replace(/_/g," "),
-    address:[e.tags["addr:street"],e.tags["addr:housenumber"]].filter(Boolean).join(" "),
-    glutenFree:e.tags["diet:gluten_free"]==="yes",
-    website:e.tags.website||e.tags["contact:website"]||"",
-    phone:e.tags.phone||e.tags["contact:phone"]||"",
-    tags:e.tags,
-  }));
+  return parseElements(d.elements);
+};
+
+// On map move: load by current bounding box
+const fetchByBbox = async ({ south, north, west, east }) => {
+  const q = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 60;`;
+  const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  return parseElements(d.elements);
 };
 
 // Restaurant info via Gemini 2.0 Flash + Google Search (gratis en free tier) ──
@@ -515,34 +527,39 @@ function RestaurantesScreen() {
       L.circleMarker([loc.lat,loc.lng],
         {radius:8,fillColor:"#2563EB",color:"#fff",weight:3,fillOpacity:1}).addTo(map);
 
-      // Load restaurants for current bbox
-      const loadArea = async()=>{
-        const b=map.getBounds();
-        try{
-          const rests=await fetchByBbox({
-            south:b.getSouth(),north:b.getNorth(),
-            west:b.getWest(),east:b.getEast(),
+      // Helper: render markers from a restaurant list
+      const renderMarkers = (rests) => {
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
+        rests.forEach(r => {
+          const col = r.glutenFree ? "#15803D" : "#525252";
+          const icon = L.divIcon({
+            html: `<div style="width:13px;height:13px;border-radius:50%;background:${col};border:2.5px solid #fff;box-shadow:0 1px 8px rgba(0,0,0,.25)"></div>`,
+            iconSize: [13,13], iconAnchor: [6,6], className: ""
           });
-          // Remove old markers
-          markersRef.current.forEach(m=>m.remove());
-          markersRef.current=[];
-          // Add new markers
-          rests.forEach(r=>{
-            const col=r.glutenFree?"#15803D":"#525252";
-            const icon=L.divIcon({
-              html:`<div style="width:13px;height:13px;border-radius:50%;background:${col};border:2.5px solid #fff;box-shadow:0 1px 8px rgba(0,0,0,.25)"></div>`,
-              iconSize:[13,13],iconAnchor:[6,6],className:""
-            });
-            const m=L.marker([r.lat,r.lng],{icon}).addTo(map)
-              .on("click",()=>{ setSel(r); setSelInfo(null); });
-            markersRef.current.push(m);
-          });
-        }catch(e){ console.warn("Overpass error",e); }
+          const m = L.marker([r.lat, r.lng], { icon }).addTo(map)
+            .on("click", () => { setSel(r); setSelInfo(null); });
+          markersRef.current.push(m);
+        });
       };
 
-      loadArea();
-      map.on("moveend",loadArea);
-      mapInst.current=map;
+      // Initial load: radius around user location (reliable, no bounds needed)
+      fetchByRadius(loc.lat, loc.lng, 1000)
+        .then(rests => { if (rests.length > 0) renderMarkers(rests); })
+        .catch(e => console.warn("Overpass initial load error", e));
+
+      // On map move: reload visible area
+      map.on("moveend", () => {
+        const b = map.getBounds();
+        fetchByBbox({
+          south: b.getSouth(), north: b.getNorth(),
+          west: b.getWest(), east: b.getEast(),
+        })
+          .then(rests => { if (rests.length > 0) renderMarkers(rests); })
+          .catch(e => console.warn("Overpass bbox error", e));
+      });
+
+      mapInst.current = map;
     });
     return()=>{dead=true;if(mapInst.current){mapInst.current.remove();mapInst.current=null;}};
   },[loc]);
