@@ -64,7 +64,16 @@ function clean(s) {
   return s.replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&#39;/g,"'").trim();
 }
 function strip(s) {
-  return s.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  return s
+    .replace(/<[^>]+>/g, " ")       // remove HTML tags
+    .replace(/&lt;[^&]*&gt;/g, " ") // remove encoded tags like &lt;a href...&gt;
+    .replace(/&lt;/g, "")           // leftover &lt;
+    .replace(/&gt;/g, "")           // leftover &gt;
+    .replace(/&amp;/g, "&")
+    .replace(/https?:\/\/\S+/g, "") // remove raw URLs
+    .replace(/href="[^"]*"/g, "")   // remove href attributes
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 function relDate(d) {
   if (!d) return "Reciente";
