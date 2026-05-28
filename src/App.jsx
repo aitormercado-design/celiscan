@@ -144,7 +144,41 @@ const dist = (a, b) => {
   return d<1000?`${Math.round(d)} m`:`${(d/1000).toFixed(1)} km`;
 };
 
-// ── HOME ──────────────────────────────────────────────────────
+// ── Shared header ─────────────────────────────────────────────
+function AppHeader({ subtitle }) {
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, #BFD9EE 0%, #C8E8D4 60%, #EEF5EE 100%)",
+      padding: "18px 20px 16px",
+      borderBottom: "1px solid rgba(0,0,0,.07)",
+      display: "flex", alignItems: "center", gap: 14, flexShrink: 0,
+    }}>
+      <img src="/logo.png" alt="Marisinglu"
+        style={{ width: 62, height: 62, objectFit: "contain", flexShrink: 0,
+          filter: "drop-shadow(0 3px 8px rgba(0,0,0,.2))" }}/>
+      <div>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1A3A2A",
+          letterSpacing: "-0.7px", lineHeight: 1.1, marginBottom: 3 }}>
+          Marisinglu
+        </h1>
+        <p style={{ fontSize: 12, color: "#4A7A5A", fontWeight: 600,
+          letterSpacing: 0.3 }}>
+          {subtitle || "Tu vida sin gluten"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Mock restaurants (fallback when Overpass is unavailable) ──
+const mockRests = (lat, lng) => [
+  { id:"m1", name:"La Huerta Sana",     cuisine:"Mediterránea", lat:lat+.0022, lng:lng-.0015, glutenFree:true,  tags:{}, address:"" },
+  { id:"m2", name:"Sushi Nakama",       cuisine:"Japonesa",     lat:lat-.0014, lng:lng+.0024, glutenFree:false, tags:{}, address:"" },
+  { id:"m3", name:"Burger Lab",         cuisine:"Americana",    lat:lat+.0011, lng:lng+.0031, glutenFree:true,  tags:{}, address:"" },
+  { id:"m4", name:"Trattoria Nonna",    cuisine:"Italiana",     lat:lat-.0024, lng:lng-.0018, glutenFree:false, tags:{}, address:"" },
+  { id:"m5", name:"Mercado de Abastos", cuisine:"Variada",      lat:lat+.0033, lng:lng+.0009, glutenFree:false, tags:{}, address:"" },
+  { id:"m6", name:"Green Roots",        cuisine:"Vegana",       lat:lat-.0009, lng:lng-.0032, glutenFree:true,  tags:{}, address:"" },
+];
 function HomeScreen() {
   const [news,setNews]   = useState([]);
   const [phase,setPhase] = useState("loading"); // loading|ok|error
@@ -165,28 +199,16 @@ function HomeScreen() {
 
   return(
     <div style={{height:"100%",overflowY:"auto",backgroundColor:T.bg}}>
-      {/* Branded header with gradient */}
-      <div style={{
-        background:"linear-gradient(160deg, #C8E6F5 0%, #D4EDE0 55%, #FAFAF8 100%)",
-        padding:"36px 28px 28px",
-        borderBottom:"1px solid rgba(0,0,0,.06)",
-        display:"flex", flexDirection:"column", alignItems:"center",
-        textAlign:"center",
-      }}>
-        <img src="/logo.png" alt="Marisinglu"
-          style={{width:110, height:110, objectFit:"contain", marginBottom:4,
-            filter:"drop-shadow(0 4px 16px rgba(0,0,0,.15))"}}/>
-        <p style={{fontSize:12, color:"#5A7A6A", fontWeight:600,
-          letterSpacing:.6, textTransform:"uppercase"}}>Tu vida sin gluten</p>
-      </div>
+      {/* Shared branded header */}
+      <AppHeader/>
 
       {/* Section title */}
-      <div style={{padding:"22px 24px 0"}}>
+      <div style={{padding:"18px 24px 0"}}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
-          <h2 style={{fontSize:20, fontWeight:800, color:T.primary, letterSpacing:"-.5px"}}>
+          <h2 style={{fontSize:18, fontWeight:800, color:T.primary, letterSpacing:"-.4px"}}>
             Noticias de hoy
           </h2>
-          <span style={{fontSize:11, color:T.tertiary, fontWeight:500}}>España</span>
+          <span style={{fontSize:11, color:T.tertiary, fontWeight:500}}>Celiaquía · España</span>
         </div>
       </div>
 
@@ -550,20 +572,24 @@ function RestaurantesScreen() {
         });
       };
 
-      // Initial load: radius around user location (reliable, no bounds needed)
-      fetchByRadius(loc.lat, loc.lng, 1000)
-        .then(rests => { if (rests.length > 0) renderMarkers(rests); })
-        .catch(e => console.warn("Overpass initial load error", e));
+      // Show mock restaurants immediately so map is never empty
+      renderMarkers(mockRests(loc.lat, loc.lng));
 
-      // On map move: reload visible area
+      // Try Overpass in background — replace mocks if we get real data
+      const tryOverpass = (fetcher) =>
+        fetcher()
+          .then(rests => { if (!dead && rests.length > 0) renderMarkers(rests); })
+          .catch(() => {}); // keep mocks on error
+
+      tryOverpass(() => fetchByRadius(loc.lat, loc.lng, 1500));
+
+      // On map move: reload visible area (keep mocks if Overpass fails)
       map.on("moveend", () => {
         const b = map.getBounds();
-        fetchByBbox({
+        tryOverpass(() => fetchByBbox({
           south: b.getSouth(), north: b.getNorth(),
-          west: b.getWest(), east: b.getEast(),
-        })
-          .then(rests => { if (rests.length > 0) renderMarkers(rests); })
-          .catch(e => console.warn("Overpass bbox error", e));
+          west:  b.getWest(),  east:  b.getEast(),
+        }));
       });
 
       mapInst.current = map;
@@ -670,12 +696,15 @@ JSON sin backticks:
 
   // Main map view
   return(
-    <div style={{height:"100%",position:"relative"}}>
+    <div style={{height:"100%",position:"relative",display:"flex",flexDirection:"column"}}>
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={analyzePhoto} style={{display:"none"}}/>
 
-      {/* Map */}
-      <div ref={mapRef} style={{width:"100%",height:"100%"}}>
+      {/* Shared header */}
+      <AppHeader subtitle="Restaurantes sin gluten cerca"/>
+
+      {/* Map — fills remaining height */}
+      <div ref={mapRef} style={{flex:1,position:"relative"}}>
         {!loc&&<div className="shimmer" style={{width:"100%",height:"100%"}}/>}
       </div>
 
