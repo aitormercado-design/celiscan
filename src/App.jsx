@@ -71,6 +71,11 @@ const getL = () => _L || (_L = new Promise(ok=>{
 }));
 
 // ── Overpass fetch ────────────────────────────────────────────
+const OVERPASS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
 const parseElements = (elements) =>
   (elements || []).filter(e => e.tags?.name).map(e => ({
     id: String(e.id), name: e.tags.name, lat: e.lat, lng: e.lon,
@@ -82,59 +87,68 @@ const parseElements = (elements) =>
     tags: e.tags,
   }));
 
-// Initial load: radius around a point (reliable, no bounds needed)
-const fetchByRadius = async (lat, lng, radius = 1000) => {
-  const q = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|bar|fast_food"](around:${radius},${lat},${lng}););out 50;`;
-  const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-  const d = await r.json();
-  return parseElements(d.elements);
+const overpassFetch = async (q) => {
+  const encoded = encodeURIComponent(q);
+  for (const base of OVERPASS) {
+    try {
+      const r = await fetch(`${base}?data=${encoded}`,
+        { signal: AbortSignal.timeout(12000) });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const rests = parseElements(d.elements);
+      if (rests.length > 0) return rests;
+    } catch {}
+  }
+  return [];
 };
 
-// On map move: load by current bounding box
-const fetchByBbox = async ({ south, north, west, east }) => {
-  const q = `[out:json][timeout:15];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 60;`;
-  const r = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-  const d = await r.json();
-  return parseElements(d.elements);
-};
+const fetchByRadius = (lat, lng, radius = 1500) =>
+  overpassFetch(`[out:json][timeout:12];(node["amenity"~"restaurant|cafe|bar|fast_food"](around:${radius},${lat},${lng}););out 60;`);
 
-// Restaurant info via Gemini 2.0 Flash + Google Search (gratis en free tier) ──
+const fetchByBbox = ({ south, north, west, east }) =>
+  overpassFetch(`[out:json][timeout:12];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 80;`);
+
+// Restaurant info via Gemini ─────────────────────────────────
 const getRestaurantInfo = async (rest) => {
   const key = import.meta.env.VITE_GEMINI_API_KEY;
   if (!key) throw new Error("Falta VITE_GEMINI_API_KEY");
 
-  const prompt = `Busca en internet información real y actualizada sobre el restaurante "${rest.name}" \
-(cocina: ${rest.cuisine}${rest.address ? `, ubicado en ${rest.address}` : ""}, España) \
-para una persona celíaca o con intolerancia al gluten.
+  const prompt = `Eres un experto en celiaquía en España. Proporciona información práctica sobre el restaurante "${rest.name}" (cocina: ${rest.cuisine}${rest.address ? `, ${rest.address}` : ""}) para una persona celíaca.
 
-Responde ÚNICAMENTE con JSON sin backticks ni texto extra:
-{"safety":"safe/warning/danger","safetyReason":"razón breve del nivel","description":"descripción del restaurante en 2 frases","celiacInfo":"info real sobre opciones sin gluten, alergenos y contaminación cruzada en este restaurante","menuOptions":["opción habitualmente segura 1","opción 2"],"warnings":["advertencia concreta si la hay"],"advice":"consejo práctico directo para entrar a este restaurante siendo celíaco"}`;
+Responde ÚNICAMENTE con JSON válido sin backticks:
+{"safety":"safe/warning/danger","safetyReason":"razón del nivel en 1 frase","description":"descripción del tipo de restaurante en 2 frases","celiacInfo":"información sobre gluten y riesgo de contaminación cruzada en este tipo de cocina","menuOptions":["plato o categoría habitualmente segura","otro"],"warnings":["riesgo concreto si aplica"],"advice":"consejo práctico para el celíaco al entrar"}`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  // Try gemini-2.0-flash with search first, fall back to gemini-1.5-flash
+  const models = [
+    { model: "gemini-2.0-flash", tools: [{ google_search: {} }] },
+    { model: "gemini-1.5-flash", tools: undefined },
+  ];
+
+  for (const { model, tools } of models) {
+    try {
+      const body = {
         contents: [{ parts: [{ text: prompt }] }],
-        tools: [{ google_search: {} }],
         generationConfig: { temperature: 0.1, maxOutputTokens: 900 },
-      }),
-    }
-  );
+      };
+      if (tools) body.tools = tools;
 
-  const d = await res.json();
-  if (d.error) throw new Error(d.error.message);
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body), signal: AbortSignal.timeout(15000) }
+      );
+      const d = await res.json();
+      if (d.error) continue; // try next model
 
-  const text = (d.candidates?.[0]?.content?.parts || [])
-    .filter(p => p.text).map(p => p.text).join("");
+      const text = (d.candidates?.[0]?.content?.parts || [])
+        .filter(p => p.text).map(p => p.text).join("");
+      if (!text) continue;
 
-  try {
-    return safeJSON(text);
-  } catch {
-    // Si Gemini responde en prosa en lugar de JSON, lo mostramos como texto
-    return { rawText: text };
+      try { return safeJSON(text); }
+      catch { return { rawText: text }; }
+    } catch {}
   }
+  throw new Error("No se pudo obtener información");
 };
 
 // Distance ────────────────────────────────────────────────────
@@ -154,7 +168,7 @@ function AppHeader({ subtitle }) {
       display: "flex", alignItems: "center", gap: 14, flexShrink: 0,
     }}>
       <img src="/logo.png" alt="Marisinglu"
-        style={{ width: 62, height: 62, objectFit: "contain", flexShrink: 0,
+        style={{ width: 80, height: 80, objectFit: "contain", flexShrink: 0,
           filter: "drop-shadow(0 3px 8px rgba(0,0,0,.2))" }}/>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1A3A2A",
@@ -696,52 +710,51 @@ JSON sin backticks:
 
   // Main map view
   return(
-    <div style={{height:"100%",position:"relative",display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
       <input ref={inputRef} type="file" accept="image/*" capture="environment"
         onChange={analyzePhoto} style={{display:"none"}}/>
 
       {/* Shared header */}
       <AppHeader subtitle="Restaurantes sin gluten cerca"/>
 
-      {/* Map — fills remaining height */}
-      <div ref={mapRef} style={{flex:1,position:"relative"}}>
-        {!loc&&<div className="shimmer" style={{width:"100%",height:"100%"}}/>}
-      </div>
+      {/* Map area — relative container for all overlays */}
+      <div style={{flex:1,position:"relative",overflow:"hidden"}}>
+        {/* Map tiles */}
+        <div ref={mapRef} style={{width:"100%",height:"100%"}}>
+          {!loc&&<div className="shimmer" style={{width:"100%",height:"100%"}}/>}
+        </div>
 
-      {/* Analyze photo button — bottom right */}
-      <div style={{position:"absolute",bottom:104,right:16,zIndex:1000}}>
-        <button onClick={()=>inputRef.current?.click()} className="press"
-          style={{backgroundColor:"rgba(10,10,10,.85)",backdropFilter:"blur(10px)",
-            border:"none",borderRadius:12,padding:"10px 14px",cursor:"pointer",
-            boxShadow:"0 2px 14px rgba(0,0,0,.2)",display:"flex",
-            alignItems:"center",gap:7}}>
-          <Camera size={15} color="#fff" strokeWidth={2}/>
-          <span style={{fontSize:12,fontWeight:700,color:"#fff",letterSpacing:"-.1px"}}>
-            Analizar foto restaurante
-          </span>
-        </button>
-      </div>
+        {/* Legend — bottom left inside map */}
+        <div style={{position:"absolute",bottom:16,left:16,zIndex:1000,
+          backgroundColor:"rgba(255,255,255,.94)",backdropFilter:"blur(10px)",
+          borderRadius:12,padding:"10px 14px",boxShadow:"0 2px 12px rgba(0,0,0,.1)"}}>
+          {[
+            {label:"Sin gluten verificado", color:"#15803D"},
+            {label:"Sin verificar",          color:"#525252"},
+          ].map(x=>(
+            <div key={x.label} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <div style={{width:10,height:10,borderRadius:"50%",backgroundColor:x.color,flexShrink:0}}/>
+              <span style={{fontSize:11,fontWeight:500,color:T.primary}}>{x.label}</span>
+            </div>
+          ))}
+          <p style={{fontSize:9,color:T.tertiary,marginTop:5,letterSpacing:.2}}>
+            Toca un punto para más info
+          </p>
+        </div>
 
-      {/* Legend — top left, more distinct */}
-      <div style={{position:"absolute",top:18,left:16,zIndex:1000,
-        backgroundColor:"rgba(255,255,255,.96)",backdropFilter:"blur(10px)",
-        borderRadius:12,padding:"11px 14px",boxShadow:"0 2px 12px rgba(0,0,0,.08)"}}>
-        {[
-          {label:"Sin gluten verificado", color:"#15803D", dot:10},
-          {label:"Sin verificar",          color:"#525252", dot:10},
-        ].map(x=>(
-          <div key={x.label} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
-            <div style={{width:x.dot,height:x.dot,borderRadius:"50%",
-              backgroundColor:x.color,flexShrink:0,
-              border:`2px solid ${x.color}33`}}/>
-            <span style={{fontSize:11,fontWeight:500,color:T.primary}}>{x.label}</span>
-          </div>
-        ))}
-        <div style={{height:1,backgroundColor:T.line,margin:"6px 0"}}/>
-        <p style={{fontSize:10,color:T.tertiary,letterSpacing:.2}}>
-          Toca un punto para ver información
-        </p>
-      </div>
+        {/* Analyze photo button — bottom right inside map */}
+        <div style={{position:"absolute",bottom:16,right:16,zIndex:1000}}>
+          <button onClick={()=>inputRef.current?.click()} className="press"
+            style={{backgroundColor:"rgba(10,10,10,.88)",backdropFilter:"blur(10px)",
+              border:"none",borderRadius:14,padding:"11px 16px",cursor:"pointer",
+              boxShadow:"0 3px 16px rgba(0,0,0,.25)",display:"flex",
+              alignItems:"center",gap:8}}>
+            <Camera size={15} color="#fff" strokeWidth={2}/>
+            <span style={{fontSize:12,fontWeight:700,color:"#fff"}}>
+              Analizar foto restaurante
+            </span>
+          </button>
+        </div>
 
       {/* Restaurant bottom sheet */}
       {sel&&(
@@ -897,6 +910,7 @@ JSON sin backticks:
           </div>
         </div>
       )}
+      </div>{/* end map area */}
     </div>
   );
 }
