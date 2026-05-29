@@ -53,6 +53,24 @@ const callGemini = async (parts) => {
   if (d.error) throw new Error(d.error.message);
   return d.candidates?.[0]?.content?.parts?.[0]?.text || "";
 };
+
+// Groq — free LLM (no quota issues, no credit card needed)
+const callGroq = async (prompt) => {
+  const key = import.meta.env.VITE_GROQ_API_KEY;
+  if (!key) throw new Error("Falta VITE_GROQ_API_KEY en Vercel → console.groq.com");
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 900, temperature: 0.1,
+    }),
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  return d.choices?.[0]?.message?.content || "";
+};
 const safeJSON = t => JSON.parse(t.replace(/```json|```/g,"").trim());
 const toB64 = f => new Promise((ok,rej)=>{
   const r=new FileReader(); r.onload=()=>ok({data:r.result.split(",")[1],type:f.type}); r.onerror=rej; r.readAsDataURL(f);
@@ -114,14 +132,14 @@ const fetchByRadius = (lat, lng, radius = 1500) =>
 const fetchByBbox = ({ south, north, west, east }) =>
   overpassFetch(`[out:json][timeout:10];(node["amenity"~"restaurant|cafe|bar|fast_food"](${south},${west},${north},${east}););out 80;`);
 
-// Restaurant info via Gemini ─────────────────────────────────
+// Restaurant info via Groq (free, no quota) ──────────────────
 const getRestaurantInfo = async (rest) => {
   const prompt = `Eres un experto en celiaquía en España. Proporciona información práctica sobre el restaurante "${rest.name}" (cocina: ${rest.cuisine}${rest.address ? `, ${rest.address}` : ""}) para una persona celíaca.
 
 Responde ÚNICAMENTE con JSON válido sin backticks ni texto extra:
 {"safety":"safe/warning/danger","safetyReason":"razón del nivel en 1 frase","description":"descripción del tipo de restaurante en 2 frases","celiacInfo":"información sobre gluten y riesgo de contaminación cruzada en este tipo de cocina","menuOptions":["plato o categoría habitualmente segura","otro"],"warnings":["riesgo concreto si aplica"],"advice":"consejo práctico para el celíaco al entrar"}`;
 
-  const text = await callGemini([{ text: prompt }]);
+  const text = await callGroq(prompt);
   try { return safeJSON(text); }
   catch { return { rawText: text }; }
 };
@@ -575,9 +593,13 @@ function RestaurantesScreen() {
         "No se pudieron cargar restaurantes reales. Mostrando datos de ejemplo."
       );
 
-      // On map move: reload visible area (keep mocks if Overpass fails)
+      // On map move: show mocks at new center immediately, then replace with real data
       map.on("moveend", () => {
         const b = map.getBounds();
+        const c = map.getCenter();
+        // Instant visual feedback at new position
+        renderMarkers(mockRests(c.lat, c.lng));
+        // Try to replace with real Overpass data
         tryOverpass(
           () => fetchByBbox({ south:b.getSouth(), north:b.getNorth(), west:b.getWest(), east:b.getEast() }),
           "Error al cargar restaurantes del área. Comprueba tu conexión."
